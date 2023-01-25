@@ -49,6 +49,10 @@ class CodeField extends StatefulWidget {
   /// {@macro flutter.widgets.editableText.onChanged}
   final void Function(String)? onChanged;
 
+  /// Enables developer to register an onScrollChanged callback that will emit
+  /// the most up-to-date ScrollController
+  final void Function(ScrollController? controller)? onScrollChanged;
+
   /// {@macro flutter.widgets.editableText.readOnly}
   final bool readOnly;
 
@@ -90,6 +94,7 @@ class CodeField extends StatefulWidget {
     this.lineNumberBuilder,
     this.focusNode,
     this.onChanged,
+    this.onScrollChanged,
     this.isDense = false,
     this.smartQuotesType,
     this.keyboardType,
@@ -127,6 +132,12 @@ class _CodeFieldState extends State<CodeField> {
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode!.onKey = _onKey;
     _focusNode!.attach(context, onKey: _onKey);
+
+    _codeScroll?.addListener(() {
+      if (widget.onScrollChanged != null) {
+        widget.onScrollChanged!(_codeScroll);
+      }
+    });
 
     _onTextChanged();
   }
