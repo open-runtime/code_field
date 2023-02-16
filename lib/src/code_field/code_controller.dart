@@ -55,7 +55,7 @@ class CodeController extends TextEditingController {
       _styleList.addAll(patternMap.values);
     }
 
-    _styleRegExp = RegExp(patternList.join('|'), multiLine: true);
+    _styleRegExp = RegExp(patternList.join('|'), multiLine: true, unicode: true);
 
     notifyListeners();
   }
@@ -114,7 +114,7 @@ class CodeController extends TextEditingController {
       _styleList.addAll(patternMap.values);
     }
 
-    _styleRegExp = RegExp(patternList.join('|'), multiLine: true);
+    _styleRegExp = RegExp(patternList.join('|'), multiLine: true, unicode: true);
   }
 
   /// Sets a specific cursor position in the text
@@ -205,6 +205,7 @@ class CodeController extends TextEditingController {
         );
       }
     }
+
     super.value = newValue;
   }
 
@@ -219,11 +220,7 @@ class CodeController extends TextEditingController {
         }
 
         int idx;
-        for (idx = 1;
-            idx < m.groupCount &&
-                idx <= _styleList.length &&
-                m.group(idx) == null;
-            idx++) {}
+        for (idx = 1; idx < m.groupCount && idx <= _styleList.length && m.group(idx) == null; idx++) {}
 
         children.add(TextSpan(
           text: m[0],
@@ -306,6 +303,7 @@ class CodeController extends TextEditingController {
     if (_styleRegExp != null) {
       return _processPatterns(text, style);
     }
+
     return TextSpan(text: text, style: style);
   }
 }
