@@ -49,6 +49,10 @@ class CodeField extends StatefulWidget {
   /// {@macro flutter.widgets.editableText.onChanged}
   final void Function(String)? onChanged;
 
+  /// Enables developer to register an onScrollChanged callback that will emit
+  /// the most up-to-date ScrollController
+  final void Function(ScrollController? controller)? onScrollChanged;
+
   /// {@macro flutter.widgets.editableText.readOnly}
   final bool readOnly;
 
@@ -57,6 +61,9 @@ class CodeField extends StatefulWidget {
 
   /// {@macro flutter.widgets.textField.selectionControls}
   final TextSelectionControls? selectionControls;
+
+  /// {@macro flutter.widgets.textField.hintText}
+  final String? hintText;
 
   final Color? background;
   final EdgeInsets padding;
@@ -87,12 +94,14 @@ class CodeField extends StatefulWidget {
     this.lineNumberBuilder,
     this.focusNode,
     this.onChanged,
+    this.onScrollChanged,
     this.isDense = false,
     this.smartQuotesType,
     this.keyboardType,
     this.lineNumbers = true,
     this.horizontalScroll = true,
     this.selectionControls,
+    this.hintText,
   }) : super(key: key);
 
   @override
@@ -110,6 +119,7 @@ class _CodeFieldState extends State<CodeField> {
   FocusNode? _focusNode;
   String? lines;
   String longestLine = '';
+  List<String> lineNumbers = [];
 
   @override
   void initState() {
@@ -122,6 +132,12 @@ class _CodeFieldState extends State<CodeField> {
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode!.onKey = _onKey;
     _focusNode!.attach(context, onKey: _onKey);
+
+    _codeScroll?.addListener(() {
+      if (widget.onScrollChanged != null) {
+        widget.onScrollChanged!(_codeScroll);
+      }
+    });
 
     _onTextChanged();
   }
@@ -152,9 +168,11 @@ class _CodeFieldState extends State<CodeField> {
     // Rebuild line number
     final str = widget.controller.text.split('\n');
     final buf = <String>[];
+    List<String> temp = [];
 
     for (var k = 0; k < str.length; k++) {
       buf.add((k + 1).toString());
+      temp.add((k + 1).toString());
     }
 
     _numberController?.text = buf.join('\n');
@@ -165,7 +183,9 @@ class _CodeFieldState extends State<CodeField> {
       if (line.length > longestLine.length) longestLine = line;
     });
 
-    setState(() {});
+    setState(() {
+      lineNumbers = temp;
+    });
   }
 
   // Wrap the codeField in a horizontal scrollView
@@ -203,8 +223,7 @@ class _CodeFieldState extends State<CodeField> {
       scrollDirection: Axis.horizontal,
 
       /// Prevents the horizontal scroll if horizontalScroll is false
-      physics:
-          widget.horizontalScroll ? null : const NeverScrollableScrollPhysics(),
+      physics: widget.horizontalScroll ? null : const NeverScrollableScrollPhysics(),
       child: intrinsic,
     );
   }
@@ -217,8 +236,7 @@ class _CodeFieldState extends State<CodeField> {
     final defaultText = Colors.grey.shade200;
 
     final styles = CodeTheme.of(context)?.styles;
-    Color? backgroundCol =
-        widget.background ?? styles?[rootKey]?.backgroundColor ?? defaultBg;
+    Color? backgroundCol = widget.background ?? styles?[rootKey]?.backgroundColor ?? defaultBg;
 
     if (widget.decoration != null) {
       backgroundCol = null;
@@ -230,50 +248,73 @@ class _CodeFieldState extends State<CodeField> {
       fontSize: textStyle.fontSize ?? 16.0,
     );
 
-    TextStyle numberTextStyle =
-        widget.lineNumberStyle.textStyle ?? const TextStyle();
-    final numberColor =
-        (styles?[rootKey]?.color ?? defaultText).withOpacity(0.7);
+    TextStyle numberTextStyle = widget.lineNumberStyle.textStyle ?? const TextStyle();
+    final numberColor = (styles?[rootKey]?.color ?? defaultText).withOpacity(0.7);
 
     // Copy important attributes
     numberTextStyle = numberTextStyle.copyWith(
       color: numberTextStyle.color ?? numberColor,
       fontSize: textStyle.fontSize,
       fontFamily: textStyle.fontFamily,
+      // height: 1.1,
     );
 
-    final cursorColor =
-        widget.cursorColor ?? styles?[rootKey]?.color ?? defaultText;
+    final cursorColor = widget.cursorColor ?? styles?[rootKey]?.color ?? defaultText;
 
-    TextField? lineNumberCol;
+    EditableText? lineNumberCol;
     Container? numberCol;
 
     if (widget.lineNumbers) {
-      lineNumberCol = TextField(
-        smartQuotesType: widget.smartQuotesType,
-        scrollPadding: widget.padding,
-        style: numberTextStyle,
-        controller: _numberController,
-        enabled: false,
+      /// NEW LINE NUMBER COLUMN TO SOLVE DOUBLE SCROLLBAR BUG
+      lineNumberCol = EditableText(
+        scrollController: _numberScroll,
+        scrollBehavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         minLines: widget.minLines,
         maxLines: widget.maxLines,
+        smartQuotesType: widget.smartQuotesType,
+        scrollPadding: EdgeInsets.zero,
+        focusNode: FocusNode(),
+        cursorColor: Colors.transparent,
+        backgroundCursorColor: Colors.transparent,
         selectionControls: widget.selectionControls,
         expands: widget.expands,
-        scrollController: _numberScroll,
-        decoration: InputDecoration(
-          disabledBorder: InputBorder.none,
-          isDense: widget.isDense,
-        ),
+        controller: _numberController ?? (throw Exception('Line Number Controller is Null in CodeField Widget')),
+        style: numberTextStyle,
         textAlign: widget.lineNumberStyle.textAlign,
+        readOnly: true,
       );
+
+      /// OLD LINE NUMBER COLUMN
+      // lineNumberCol = TextField(
+      //   smartQuotesType: widget.smartQuotesType,
+      //   scrollPadding: widget.padding,
+      //   style: numberTextStyle,
+      //   controller: _numberController,
+      //   enabled: false,
+      //   minLines: widget.minLines,
+      //   maxLines: widget.maxLines,
+      //   selectionControls: widget.selectionControls,
+      //   expands: widget.expands,
+      //   scrollController: _numberScroll,
+      //   decoration: InputDecoration(
+      //     disabledBorder: InputBorder.none,
+      //     isDense: widget.isDense,
+      //   ),
+      //   textAlign: widget.lineNumberStyle.textAlign,
+      // );
 
       numberCol = Container(
         width: widget.lineNumberStyle.width,
-        padding: EdgeInsets.only(
-          left: widget.padding.left,
-          right: widget.lineNumberStyle.margin / 2,
-        ),
         color: widget.lineNumberStyle.background,
+
+        /// CUSTOM PADDING
+        padding: const EdgeInsets.only(top: 8),
+
+        /// OLD DEFAULT PADDING
+        // EdgeInsets.only(
+        //   left: widget.padding.left,
+        //   right: widget.lineNumberStyle.margin / 2,
+        // ),
         child: lineNumberCol,
       );
     }
@@ -296,6 +337,7 @@ class _CodeFieldState extends State<CodeField> {
         border: InputBorder.none,
         focusedBorder: InputBorder.none,
         isDense: widget.isDense,
+        hintText: widget.hintText,
       ),
       cursorColor: cursorColor,
       autocorrect: false,
@@ -312,9 +354,7 @@ class _CodeFieldState extends State<CodeField> {
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           // Control horizontal scrolling
-          return widget.wrap
-              ? codeField
-              : _wrapInScrollView(codeField, textStyle, constraints.maxWidth);
+          return widget.wrap ? codeField : _wrapInScrollView(codeField, textStyle, constraints.maxWidth);
         },
       ),
     );
