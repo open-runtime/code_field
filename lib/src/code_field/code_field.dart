@@ -308,7 +308,7 @@ class _CodeFieldState extends State<CodeField> {
         color: widget.lineNumberStyle.background,
 
         /// CUSTOM PADDING
-        padding: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.only(top: 4),
 
         /// OLD DEFAULT PADDING
         // EdgeInsets.only(
@@ -336,8 +336,9 @@ class _CodeFieldState extends State<CodeField> {
         disabledBorder: InputBorder.none,
         border: InputBorder.none,
         focusedBorder: InputBorder.none,
-        isDense: widget.isDense,
+        isDense: true,
         hintText: widget.hintText,
+        contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       ),
       cursorColor: cursorColor,
       autocorrect: false,
