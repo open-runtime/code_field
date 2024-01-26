@@ -223,7 +223,7 @@ class _CodeFieldState extends State<CodeField> {
       scrollDirection: Axis.horizontal,
 
       /// Prevents the horizontal scroll if horizontalScroll is false
-      physics: widget.horizontalScroll ? null : const NeverScrollableScrollPhysics(),
+      physics: widget.horizontalScroll ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
       child: intrinsic,
     );
   }
@@ -267,6 +267,7 @@ class _CodeFieldState extends State<CodeField> {
     if (widget.lineNumbers) {
       /// NEW LINE NUMBER COLUMN TO SOLVE DOUBLE SCROLLBAR BUG
       lineNumberCol = EditableText(
+        scrollPhysics: const ClampingScrollPhysics(),
         scrollController: _numberScroll,
         scrollBehavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
         minLines: widget.minLines,
@@ -325,6 +326,7 @@ class _CodeFieldState extends State<CodeField> {
       focusNode: _focusNode,
       onTap: widget.onTap,
       scrollPadding: widget.padding,
+      scrollPhysics: const ClampingScrollPhysics(),
       style: textStyle,
       controller: widget.controller,
       minLines: widget.minLines,
