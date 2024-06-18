@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:highlight/highlight_core.dart';
@@ -8,10 +9,12 @@ import '../code_modifiers/indent_code_modifier.dart';
 import '../code_modifiers/tab_code_modifier.dart';
 import '../code_theme/code_theme.dart';
 import '../code_theme/code_theme_data.dart';
+import 'code_auto_complete.dart';
 import 'editor_params.dart';
 
 class CodeController extends TextEditingController {
   Mode? _language;
+  CodeAutoComplete? autoComplete;
 
   /// A highlight language to parse the text with
   Mode? get language => _language;
@@ -111,7 +114,7 @@ class CodeController extends TextEditingController {
       patternList.addAll(patternMap.keys.map((e) => '($e)'));
       _styleList.addAll(patternMap.values);
     }
-
+    
     _styleRegExp = RegExp(patternList.join('|'), multiLine: true, unicode: true);
   }
 
@@ -171,6 +174,29 @@ class CodeController extends TextEditingController {
     if (event.isKeyPressed(LogicalKeyboardKey.tab)) {
       text = text.replaceRange(selection.start, selection.end, '\t');
       return KeyEventResult.handled;
+    }
+
+    if (autoComplete?.isShowing ?? false) {
+      if (event.isKeyPressed(LogicalKeyboardKey.arrowDown)) {
+        autoComplete!.current =
+            (autoComplete!.current + 1) % autoComplete!.options.length;
+        autoComplete!.panelSetState?.call(() {});
+        return KeyEventResult.handled;
+      }
+      if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
+        autoComplete!.current =
+            (autoComplete!.current - 1) % autoComplete!.options.length;
+        autoComplete!.panelSetState?.call(() {});
+        return KeyEventResult.handled;
+      }
+      if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
+        autoComplete!.writeCurrent();
+        return KeyEventResult.handled;
+      }
+      if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+        autoComplete!.hide();
+        return KeyEventResult.handled;
+      }
     }
 
     return KeyEventResult.ignored;
@@ -303,5 +329,21 @@ class CodeController extends TextEditingController {
     }
 
     return TextSpan(text: text, style: style);
+  }
+
+  CodeController copyWith({
+    CodeAutoComplete? autoComplete,
+    Map<String, TextStyle>? patternMap,
+    Map<String, TextStyle>? stringMap,
+    EditorParams? params,
+    List<CodeModifier>? modifiers,
+  }) {
+    return CodeController(
+      language: _language,
+      patternMap: patternMap ?? this.patternMap,
+      stringMap: stringMap ?? this.stringMap,
+      params: params ?? this.params,
+      modifiers: modifiers ?? this.modifiers,
+    );
   }
 }

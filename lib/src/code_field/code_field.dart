@@ -1,17 +1,24 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 
 import '../code_theme/code_theme.dart';
 import '../line_numbers/line_number_controller.dart';
 import '../line_numbers/line_number_style.dart';
+import 'code_auto_complete.dart';
 import 'code_controller.dart';
 
 class CodeField extends StatefulWidget {
   /// {@macro flutter.widgets.textField.smartQuotesType}
   final SmartQuotesType? smartQuotesType;
+
+/// {@macro flutter.widgets.textField.smartDashesType}
+  final SmartDashesType? smartDashesType;
 
   /// {@macro flutter.widgets.textField.keyboardType}
   final TextInputType? keyboardType;
@@ -62,9 +69,14 @@ class CodeField extends StatefulWidget {
   /// {@macro flutter.widgets.textField.selectionControls}
   final TextSelectionControls? selectionControls;
 
+  /// {@macro flutter.widgets.textField.textInputAction}
+  final TextInputAction? textInputAction;
+
+  /// {@macro flutter.services.TextInputConfiguration.enableSuggestions}
+  final bool enableSuggestions;
+
   /// {@macro flutter.widgets.textField.hintText}
   final String? hintText;
-
   final Color? background;
   final EdgeInsets padding;
   final Decoration? decoration;
@@ -73,6 +85,9 @@ class CodeField extends StatefulWidget {
   final void Function()? onTap;
   final bool lineNumbers;
   final bool horizontalScroll;
+  final String? hintText;
+  final TextStyle? hintStyle;
+  final CodeAutoComplete? autoComplete;
 
   const CodeField({
     Key? key,
@@ -97,11 +112,16 @@ class CodeField extends StatefulWidget {
     this.onScrollChanged,
     this.isDense = false,
     this.smartQuotesType,
+    this.smartDashesType,
     this.keyboardType,
     this.lineNumbers = true,
     this.horizontalScroll = true,
     this.selectionControls,
     this.hintText,
+    this.hintStyle,
+    this.autoComplete,
+    this.textInputAction,
+    this.enableSuggestions = false,
   }) : super(key: key);
 
   @override
@@ -133,13 +153,22 @@ class _CodeFieldState extends State<CodeField> {
     _focusNode!.onKey = _onKey;
     _focusNode!.attach(context, onKey: _onKey);
 
-    _codeScroll?.addListener(() {
-      if (widget.onScrollChanged != null) {
-        widget.onScrollChanged!(_codeScroll);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      createAutoComplate();
+      _codeScroll?.addListener(() {
+        if (widget.onScrollChanged != null) {
+          widget.onScrollChanged!(_codeScroll);
+        }
+      });
     });
 
     _onTextChanged();
+  }
+
+  void createAutoComplate() {
+    widget.autoComplete?.show(context, widget, _focusNode!);
+    widget.controller.autoComplete = widget.autoComplete;
+    _codeScroll?.addListener(hideAutoComplete);
   }
 
   KeyEventResult _onKey(FocusNode node, RawKeyEvent event) {
@@ -157,6 +186,7 @@ class _CodeFieldState extends State<CodeField> {
     _codeScroll?.dispose();
     _numberController?.dispose();
     _keyboardVisibilitySubscription?.cancel();
+    widget.autoComplete?.remove();
     super.dispose();
   }
 
@@ -215,17 +245,32 @@ class _CodeFieldState extends State<CodeField> {
       ),
     );
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        left: leftPad,
-        right: widget.padding.right,
+    return MediaQuery(
+      // TODO: Temporary fix: https://github.com/flutter/flutter/issues/127017
+      data: !kIsWeb && Platform.isIOS
+          ? const MediaQueryData(
+              gestureSettings: DeviceGestureSettings(touchSlop: 8),
+            )
+          : MediaQuery.of(context),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: leftPad,
+          right: widget.padding.right,
+        ),
+        scrollDirection: Axis.horizontal,
+        /// Prevents the horizontal scroll if horizontalScroll is false
+        physics: widget.horizontalScroll ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
+        child: intrinsic,
       ),
-      scrollDirection: Axis.horizontal,
-
-      /// Prevents the horizontal scroll if horizontalScroll is false
-      physics: widget.horizontalScroll ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
-      child: intrinsic,
     );
+  }
+
+  void removeAutoComplete() {
+    widget.autoComplete?.remove();
+  }
+
+  void hideAutoComplete() {
+    widget.autoComplete?.hide();
   }
 
   @override
@@ -323,8 +368,12 @@ class _CodeFieldState extends State<CodeField> {
     final codeField = TextField(
       keyboardType: widget.keyboardType,
       smartQuotesType: widget.smartQuotesType,
+      smartDashesType: widget.smartDashesType,
       focusNode: _focusNode,
-      onTap: widget.onTap,
+      onTap: () {
+        widget.autoComplete?.hide();
+        widget.onTap?.call();
+      },
       scrollPadding: widget.padding,
       scrollPhysics: const ClampingScrollPhysics(),
       style: textStyle,
@@ -338,16 +387,24 @@ class _CodeFieldState extends State<CodeField> {
         disabledBorder: InputBorder.none,
         border: InputBorder.none,
         focusedBorder: InputBorder.none,
-        isDense: true,
+        isDense: widget.isDense,
+        hintStyle: widget.hintStyle,
         hintText: widget.hintText,
         contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       ),
+      onTapOutside: (e) {
+        Future.delayed(const Duration(milliseconds: 300), hideAutoComplete);
+      },
       cursorColor: cursorColor,
       autocorrect: false,
-      enableSuggestions: false,
+      enableSuggestions: widget.enableSuggestions,
       enabled: widget.enabled,
-      onChanged: widget.onChanged,
+      onChanged: (text) {
+        widget.onChanged?.call(text);
+        widget.autoComplete?.streamController.add(text);
+      },
       readOnly: widget.readOnly,
+      textInputAction: widget.textInputAction,
     );
 
     final codeCol = Theme(
