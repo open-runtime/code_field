@@ -9,9 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  linked_scroll_controller: ^0.2.0
-  highlight: ^0.7.0
-  flutter_highlight: ^0.7.0
+  linked_scroll_controller:
+  highlight:
+  flutter_highlight:
 
 dev_dependencies:
   flutter_test:

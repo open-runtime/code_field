@@ -34,7 +34,34 @@ class CodeController extends TextEditingController {
   }
 
   /// A map of specific regexes to style
-  final Map<String, TextStyle>? patternMap;
+  // Map<String, TextStyle>? patternMap;
+  Map<String, TextStyle>? _patternMap;
+
+  Map<String, TextStyle>? get patternMap => _patternMap;
+
+  set patternMap(Map<String, TextStyle>? patternMap) {
+    if (patternMap == _patternMap) {
+      return;
+    }
+
+    _patternMap = patternMap;
+
+    final patternList = <String>[];
+    if (stringMap != null) {
+      patternList.addAll(stringMap!.keys.map((e) => r'(\b' + e + r'\b)'));
+      _styleList.addAll(stringMap!.values);
+    }
+    if (patternMap != null) {
+      patternList.addAll(patternMap.keys.map((e) => '($e)'));
+      _styleList.addAll(patternMap.values);
+    }
+
+    _styleRegExp = RegExp(patternList.join('|'), multiLine: true, unicode: true);
+
+    notifyListeners();
+  }
+
+  // final Map<String, TextStyle>? patternMap;
 
   /// A map of specific keywords to style
   final Map<String, TextStyle>? stringMap;
@@ -60,7 +87,7 @@ class CodeController extends TextEditingController {
     Mode? language,
     // @Deprecated('Use CodeTheme widget to provide theme to CodeField.')
     //     Map<String, TextStyle>? theme,
-    this.patternMap,
+    Map<String, TextStyle>? patternMap,
     this.stringMap,
     this.params = const EditorParams(),
     this.modifiers = const [
@@ -70,6 +97,7 @@ class CodeController extends TextEditingController {
     ],
   }) : super(text: text) {
     this.language = language;
+    this.patternMap = patternMap;
 
     // Create modifier map
     for (final el in modifiers) {
@@ -83,9 +111,10 @@ class CodeController extends TextEditingController {
       _styleList.addAll(stringMap!.values);
     }
     if (patternMap != null) {
-      patternList.addAll(patternMap!.keys.map((e) => '($e)'));
-      _styleList.addAll(patternMap!.values);
+      patternList.addAll(patternMap.keys.map((e) => '($e)'));
+      _styleList.addAll(patternMap.values);
     }
+    
     _styleRegExp = RegExp(patternList.join('|'), multiLine: true, unicode: true);
   }
 
@@ -187,7 +216,7 @@ class CodeController extends TextEditingController {
   set value(TextEditingValue newValue) {
     final loc = _insertedLoc(text, newValue.text);
 
-    if (loc != null) {
+    if (loc != null && loc != -1) {
       final char = newValue.text[loc];
       final modifier = _modifierMap[char];
       final val = modifier?.updateString(super.text, selection, params);
@@ -200,6 +229,7 @@ class CodeController extends TextEditingController {
         );
       }
     }
+
     super.value = newValue;
   }
 
@@ -214,11 +244,7 @@ class CodeController extends TextEditingController {
         }
 
         int idx;
-        for (idx = 1;
-            idx < m.groupCount &&
-                idx <= _styleList.length &&
-                m.group(idx) == null;
-            idx++) {}
+        for (idx = 1; idx < m.groupCount && idx <= _styleList.length && m.group(idx) == null; idx++) {}
 
         children.add(TextSpan(
           text: m[0],
@@ -301,6 +327,7 @@ class CodeController extends TextEditingController {
     if (_styleRegExp != null) {
       return _processPatterns(text, style);
     }
+
     return TextSpan(text: text, style: style);
   }
 
