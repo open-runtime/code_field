@@ -85,7 +85,6 @@ class CodeField extends StatefulWidget {
   final void Function()? onTap;
   final bool lineNumbers;
   final bool horizontalScroll;
-  final String? hintText;
   final TextStyle? hintStyle;
   final CodeAutoComplete? autoComplete;
 
