@@ -288,13 +288,11 @@ class CodeController extends TextEditingController {
   }
 
   CodeController copyWith({
-    Mode? _language,
     CodeAutoComplete? autoComplete,
     Map<String, TextStyle>? patternMap,
     Map<String, TextStyle>? stringMap,
     EditorParams? params,
     List<CodeModifier>? modifiers,
-    RegExp? _styleRegExp,
     String? language,
     String? theme,
   }) {
