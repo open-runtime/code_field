@@ -8,8 +8,7 @@ class CustomCodeBox extends StatefulWidget {
   final String language;
   final String theme;
 
-  const CustomCodeBox({Key? key, required this.language, required this.theme})
-      : super(key: key);
+  const CustomCodeBox({Key? key, required this.language, required this.theme}) : super(key: key);
 
   @override
   _CustomCodeBoxState createState() => _CustomCodeBoxState();
@@ -60,16 +59,13 @@ class _CustomCodeBoxState extends State<CustomCodeBox> {
     ];
   }
 
-  Widget buildDropdown(Iterable<String?> choices, String value, IconData icon,
-      Function(String?) onChanged) {
+  Widget buildDropdown(Iterable<String?> choices, String value, IconData icon, Function(String?) onChanged) {
     return DropdownButton<String>(
       value: value,
       items: choices.map((String? value) {
         return new DropdownMenuItem<String>(
           value: value,
-          child: value == null
-              ? Divider()
-              : Text(value, style: TextStyle(color: Colors.white)),
+          child: value == null ? Divider() : Text(value, style: TextStyle(color: Colors.white)),
         );
       }).toList(),
       icon: Icon(icon, color: Colors.white),
@@ -80,13 +76,11 @@ class _CustomCodeBoxState extends State<CustomCodeBox> {
 
   @override
   Widget build(BuildContext context) {
-    final codeDropdown =
-        buildDropdown(languageList, language!, Icons.code, (val) {
+    final codeDropdown = buildDropdown(languageList, language!, Icons.code, (val) {
       if (val == null) return;
       setState(() => language = val);
     });
-    final themeDropdown =
-        buildDropdown(themeList, theme!, Icons.color_lens, (val) {
+    final themeDropdown = buildDropdown(themeList, theme!, Icons.color_lens, (val) {
       if (val == null) return;
       setState(() => theme = val);
     });
@@ -112,8 +106,7 @@ class InnerField extends StatefulWidget {
   final String language;
   final String theme;
 
-  const InnerField({Key? key, required this.language, required this.theme})
-      : super(key: key);
+  const InnerField({Key? key, required this.language, required this.theme}) : super(key: key);
 
   @override
   _InnerFieldState createState() => _InnerFieldState();
@@ -133,13 +126,13 @@ class _InnerFieldState extends State<InnerField> {
           fontWeight: FontWeight.w800,
           color: Colors.blue,
         ),
-        r"\B![a-zA-Z0-9]+\b":
-            TextStyle(color: Colors.yellow, fontStyle: FontStyle.italic),
+        r"\B![a-zA-Z0-9]+\b": TextStyle(color: Colors.yellow, fontStyle: FontStyle.italic),
       },
       stringMap: {
         "bev": TextStyle(color: Colors.indigo),
       },
-      language: allLanguages[widget.language],
+      language: widget.language,
+      theme: 'base16-ocean.dark',
     );
   }
 

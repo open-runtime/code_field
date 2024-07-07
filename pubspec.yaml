@@ -4,7 +4,8 @@ version: 1.1.1
 homepage: https://github.com/BertrandBev/code_field
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.26.0"
 
 dependencies:
   flutter:
@@ -12,6 +13,12 @@ dependencies:
   linked_scroll_controller:
   highlight:
   flutter_highlight:
+  runtime_flutter_code_highlighter:
+    path: '../Pieces/syntect_dart/flutter'
+#    git:
+#      url: https://github.com/open-runtime/syntect_dart.git
+#      ref: feat/gh-actions
+#      path: flutter
 
 dev_dependencies:
   flutter_test:

@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:code_text_field/code_text_field.dart';
+
 // Import the language & theme
-import 'package:highlight/languages/dart.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/a11y-dark.dart';
 
@@ -24,7 +24,8 @@ class _CodeEditorState extends State<CodeEditor> {
     // Instantiate the CodeController
     _codeController = CodeController(
       text: source,
-      language: dart,
+      language: 'dart',
+      theme: 'base16-ocean.dark',
     );
   }
 
@@ -62,7 +63,8 @@ class _CodeEditor1State extends State<CodeEditor1> {
     // Instantiate the CodeController
     _codeController = CodeController(
       text: source,
-      language: dart,
+      language: 'dart',
+      theme: 'base16-ocean.dark',
     );
   }
 
@@ -103,7 +105,8 @@ class _CodeEditor2State extends State<CodeEditor2> {
     // Instantiate the CodeController
     _codeController = CodeController(
       text: source,
-      language: dart,
+      language: 'dart',
+      theme: 'base16-ocean.dark',
       stringMap: {
         "Hello": TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
         "world": TextStyle(fontStyle: FontStyle.italic, color: Colors.green),
@@ -148,10 +151,10 @@ class _CodeEditor3State extends State<CodeEditor3> {
     // Instantiate the CodeController
     _codeController = CodeController(
       text: source,
-      language: dart,
+      language: 'dart',
+      theme: 'base16-ocean.dark',
       patternMap: {
-        r"\B#[a-zA-Z0-9]+\b":
-            TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent),
+        r"\B#[a-zA-Z0-9]+\b": TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent),
       },
     );
   }
@@ -201,6 +204,8 @@ class _CodeEditor4State extends State<CodeEditor4> {
         "void": TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
         "print": TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
       },
+      language: 'dart',
+      theme: 'base16-ocean.dark',
     );
   }
 
@@ -258,7 +263,8 @@ void main() {
     // Instantiate the CodeController
     _codeController = CodeController(
       text: source,
-      language: dart,
+      language: 'dart',
+      theme: 'base16-ocean.dark',
     );
   }
 
