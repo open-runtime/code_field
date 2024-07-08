@@ -1,40 +1,44 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:highlight/highlight_core.dart';
+import 'package:runtime_flutter_code_highlighter/runtime_flutter_code_highlighter.dart';
 
 import '../code_modifiers/close_block_code_modifier.dart';
 import '../code_modifiers/code_modifier.dart';
 import '../code_modifiers/indent_code_modifier.dart';
 import '../code_modifiers/tab_code_modifier.dart';
-import '../code_theme/code_theme.dart';
-import '../code_theme/code_theme_data.dart';
 import 'code_auto_complete.dart';
 import 'editor_params.dart';
 
 class CodeController extends TextEditingController {
-  Mode? _language;
+  String? _language;
+  String? _theme;
   CodeAutoComplete? autoComplete;
 
   /// A highlight language to parse the text with
-  Mode? get language => _language;
+  String? get language => _language;
 
-  set language(Mode? language) {
+  set language(String? language) {
     if (language == _language) {
       return;
-    }
-
-    if (language != null) {
-      _languageId = language.hashCode.toString();
-      highlight.registerLanguage(_languageId, language);
     }
 
     _language = language;
     notifyListeners();
   }
 
+  String? get theme => _theme;
+
+  set theme(String? theme) {
+    if (theme == _theme) {
+      return;
+    }
+
+    _theme = theme;
+    notifyListeners();
+  }
+
   /// A map of specific regexes to style
-  // Map<String, TextStyle>? patternMap;
   Map<String, TextStyle>? _patternMap;
 
   Map<String, TextStyle>? get patternMap => _patternMap;
@@ -60,9 +64,6 @@ class CodeController extends TextEditingController {
 
     notifyListeners();
   }
-
-  // final Map<String, TextStyle>? patternMap;
-
   /// A map of specific keywords to style
   final Map<String, TextStyle>? stringMap;
 
@@ -75,18 +76,14 @@ class CodeController extends TextEditingController {
   final List<CodeModifier> modifiers;
 
   /* Computed members */
-  String _languageId = '';
   final _modifierMap = <String, CodeModifier>{};
   final _styleList = <TextStyle>[];
   RegExp? _styleRegExp;
 
-  String get languageId => _languageId;
-
   CodeController({
-    String? text,
-    Mode? language,
-    // @Deprecated('Use CodeTheme widget to provide theme to CodeField.')
-    //     Map<String, TextStyle>? theme,
+    super.text,
+    String? language,
+    String? theme,
     Map<String, TextStyle>? patternMap,
     this.stringMap,
     this.params = const EditorParams(),
@@ -95,13 +92,14 @@ class CodeController extends TextEditingController {
       CloseBlockModifier(),
       TabModifier(),
     ],
-  }) : super(text: text) {
+  }) {
     this.language = language;
+    this.theme = theme;
     this.patternMap = patternMap;
 
     // Create modifier map
-    for (final el in modifiers) {
-      _modifierMap[el.char] = el;
+    for (final mod in modifiers) {
+      _modifierMap[mod.char] = mod;
     }
 
     // Build styleRegExp
@@ -110,11 +108,12 @@ class CodeController extends TextEditingController {
       patternList.addAll(stringMap!.keys.map((e) => r'(\b' + e + r'\b)'));
       _styleList.addAll(stringMap!.values);
     }
+
     if (patternMap != null) {
-      patternList.addAll(patternMap.keys.map((e) => '($e)'));
-      _styleList.addAll(patternMap.values);
+      patternList.addAll(patternMap!.keys.map((e) => '($e)'));
+      _styleList.addAll(patternMap!.values);
     }
-    
+
     _styleRegExp = RegExp(patternList.join('|'), multiLine: true, unicode: true);
   }
 
@@ -178,14 +177,12 @@ class CodeController extends TextEditingController {
 
     if (autoComplete?.isShowing ?? false) {
       if (event.isKeyPressed(LogicalKeyboardKey.arrowDown)) {
-        autoComplete!.current =
-            (autoComplete!.current + 1) % autoComplete!.options.length;
+        autoComplete!.current = (autoComplete!.current + 1) % autoComplete!.options.length;
         autoComplete!.panelSetState?.call(() {});
         return KeyEventResult.handled;
       }
       if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
-        autoComplete!.current =
-            (autoComplete!.current - 1) % autoComplete!.options.length;
+        autoComplete!.current = (autoComplete!.current - 1) % autoComplete!.options.length;
         autoComplete!.panelSetState?.call(() {});
         return KeyEventResult.handled;
       }
@@ -216,7 +213,7 @@ class CodeController extends TextEditingController {
   set value(TextEditingValue newValue) {
     final loc = _insertedLoc(text, newValue.text);
 
-    if (loc != null && loc != -1) {
+    if (loc != null) {
       final char = newValue.text[loc];
       final modifier = _modifierMap[char];
       final val = modifier?.updateString(super.text, selection, params);
@@ -229,90 +226,40 @@ class CodeController extends TextEditingController {
         );
       }
     }
-
     super.value = newValue;
   }
 
-  TextSpan _processPatterns(String text, TextStyle? style) {
-    final children = <TextSpan>[];
-
-    text.splitMapJoin(
-      _styleRegExp!,
-      onMatch: (Match m) {
-        if (_styleList.isEmpty) {
-          return '';
-        }
-
-        int idx;
-        for (idx = 1; idx < m.groupCount && idx <= _styleList.length && m.group(idx) == null; idx++) {}
-
-        children.add(TextSpan(
-          text: m[0],
-          style: _styleList[idx - 1],
-        ));
-        return '';
-      },
-      onNonMatch: (String span) {
-        children.add(TextSpan(text: span, style: style));
-        return '';
-      },
-    );
-
-    return TextSpan(style: style, children: children);
-  }
-
-  TextSpan _processLanguage(
-    String text,
-    CodeThemeData? widgetTheme,
-    TextStyle? style,
-  ) {
-    final result = highlight.parse(text, language: _languageId);
-
-    final nodes = result.nodes;
-
-    final children = <TextSpan>[];
-    var currentSpans = children;
-    final stack = <List<TextSpan>>[];
-
-    void traverse(Node node) {
-      var val = node.value;
-      final nodeChildren = node.children;
-      final nodeStyle = widgetTheme?.styles[node.className];
-
-      if (val != null) {
-        var child = TextSpan(text: val, style: nodeStyle);
-
-        if (_styleRegExp != null) {
-          child = _processPatterns(val, nodeStyle);
-        }
-
-        currentSpans.add(child);
-      } else if (nodeChildren != null) {
-        List<TextSpan> tmp = [];
-
-        currentSpans.add(TextSpan(
-          children: tmp,
-          style: nodeStyle,
-        ));
-
-        stack.add(currentSpans);
-        currentSpans = tmp;
-
-        for (final n in nodeChildren) {
-          traverse(n);
-          if (n == nodeChildren.last) {
-            currentSpans = stack.isEmpty ? children : stack.removeLast();
-          }
-        }
-      }
-    }
-
-    if (nodes != null) {
-      nodes.forEach(traverse);
-    }
-
-    return TextSpan(style: style, children: children);
-  }
+  // TextSpan _processPatterns(String text, TextStyle? style) {
+  //   final children = <TextSpan>[];
+  //
+  //   text.splitMapJoin(
+  //     _styleRegExp!,
+  //     onMatch: (Match m) {
+  //       if (_styleList.isEmpty) {
+  //         return '';
+  //       }
+  //
+  //       int idx;
+  //       for (idx = 1;
+  //           idx < m.groupCount &&
+  //               idx <= _styleList.length &&
+  //               m.group(idx) == null;
+  //           idx++) {}
+  //
+  //       children.add(TextSpan(
+  //         text: m[0],
+  //         style: _styleList[idx - 1],
+  //       ));
+  //       return '';
+  //     },
+  //     onNonMatch: (String span) {
+  //       children.add(TextSpan(text: span, style: style));
+  //       return '';
+  //     },
+  //   );
+  //
+  //   return TextSpan(style: style, children: children);
+  // }
 
   @override
   TextSpan buildTextSpan({
@@ -320,15 +267,23 @@ class CodeController extends TextEditingController {
     TextStyle? style,
     bool? withComposing,
   }) {
-    // Return parsing
-    if (_language != null) {
-      return _processLanguage(text, CodeTheme.of(context), style);
-    }
-    if (_styleRegExp != null) {
-      return _processPatterns(text, style);
-    }
+    return RuntimeFlutterCodeHighlighter.highlightedWidgetTree(
+      text,
+      language ?? 'Dart',
+      theme ?? 'OneHalfDark',
+      style,
+    );
 
-    return TextSpan(text: text, style: style);
+    // Return parsing
+    // if (_language != null) {
+    //   return _processLanguage(text, theme, language);
+    // }
+    //
+    // if (_styleRegExp != null) {
+    //   return _processPatterns(text, style);
+    // }
+    //
+    // return TextSpan(text: text, style: style);
   }
 
   CodeController copyWith({
@@ -337,13 +292,16 @@ class CodeController extends TextEditingController {
     Map<String, TextStyle>? stringMap,
     EditorParams? params,
     List<CodeModifier>? modifiers,
+    String? language,
+    String? theme,
   }) {
     return CodeController(
-      language: _language,
+      language: language ?? this.language,
       patternMap: patternMap ?? this.patternMap,
       stringMap: stringMap ?? this.stringMap,
       params: params ?? this.params,
       modifiers: modifiers ?? this.modifiers,
+      theme: theme ?? this.theme,
     );
   }
 }
