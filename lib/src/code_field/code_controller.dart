@@ -229,37 +229,37 @@ class CodeController extends TextEditingController {
     super.value = newValue;
   }
 
-  TextSpan _processPatterns(String text, TextStyle? style) {
-    final children = <TextSpan>[];
-
-    text.splitMapJoin(
-      _styleRegExp!,
-      onMatch: (Match m) {
-        if (_styleList.isEmpty) {
-          return '';
-        }
-
-        int idx;
-        for (idx = 1;
-            idx < m.groupCount &&
-                idx <= _styleList.length &&
-                m.group(idx) == null;
-            idx++) {}
-
-        children.add(TextSpan(
-          text: m[0],
-          style: _styleList[idx - 1],
-        ));
-        return '';
-      },
-      onNonMatch: (String span) {
-        children.add(TextSpan(text: span, style: style));
-        return '';
-      },
-    );
-
-    return TextSpan(style: style, children: children);
-  }
+  // TextSpan _processPatterns(String text, TextStyle? style) {
+  //   final children = <TextSpan>[];
+  //
+  //   text.splitMapJoin(
+  //     _styleRegExp!,
+  //     onMatch: (Match m) {
+  //       if (_styleList.isEmpty) {
+  //         return '';
+  //       }
+  //
+  //       int idx;
+  //       for (idx = 1;
+  //           idx < m.groupCount &&
+  //               idx <= _styleList.length &&
+  //               m.group(idx) == null;
+  //           idx++) {}
+  //
+  //       children.add(TextSpan(
+  //         text: m[0],
+  //         style: _styleList[idx - 1],
+  //       ));
+  //       return '';
+  //     },
+  //     onNonMatch: (String span) {
+  //       children.add(TextSpan(text: span, style: style));
+  //       return '';
+  //     },
+  //   );
+  //
+  //   return TextSpan(style: style, children: children);
+  // }
 
   @override
   TextSpan buildTextSpan({
@@ -267,7 +267,6 @@ class CodeController extends TextEditingController {
     TextStyle? style,
     bool? withComposing,
   }) {
-    print('language: $language, theme: $theme');
     return RuntimeFlutterCodeHighlighter.highlightedWidgetTree(
       text,
       language ?? 'Dart',
