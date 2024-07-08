@@ -15,7 +15,7 @@ dependencies:
   runtime_flutter_code_highlighter:
 #    path: '../Pieces/syntect_dart/flutter'
     git:
-      url: https://github.com/open-runtime/syntect_dart.git
+      url:  git@github.com:open-runtime/syntect_dart.git
       ref: feat/gh-actions
       path: flutter
 
