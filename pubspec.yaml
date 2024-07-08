@@ -13,11 +13,11 @@ dependencies:
   highlight:
   flutter_highlight:
   runtime_flutter_code_highlighter:
-    path: '../Pieces/syntect_dart/flutter'
-#    git:
-#      url: https://github.com/open-runtime/syntect_dart.git
-#      ref: feat/gh-actions
-#      path: flutter
+#    path: '../Pieces/syntect_dart/flutter'
+    git:
+      url: https://github.com/open-runtime/syntect_dart.git
+      ref: feat/gh-actions
+      path: flutter
 
 dev_dependencies:
   flutter_test:
