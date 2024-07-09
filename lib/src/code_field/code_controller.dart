@@ -64,6 +64,7 @@ class CodeController extends TextEditingController {
 
     notifyListeners();
   }
+
   /// A map of specific keywords to style
   final Map<String, TextStyle>? stringMap;
 
@@ -269,7 +270,7 @@ class CodeController extends TextEditingController {
   }) {
     return RuntimeFlutterCodeHighlighter.highlightedWidgetTree(
       text,
-      language ?? 'Dart',
+      RuntimeCodeHighlighterLanguages.fromExtension(language ?? 'txt').classification(),
       theme ?? 'OneHalfDark',
       style,
     );
