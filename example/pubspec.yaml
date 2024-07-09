@@ -18,6 +18,11 @@ dev_dependencies:
     sdk: flutter
   code_text_field:
     path: ../
+  runtime_flutter_code_highlighter:
+    git:
+      url: git@github.com:open-runtime/code_highlighter.git
+      ref: init
+      path: flutter
 
 flutter:
   uses-material-design: true

@@ -2,7 +2,7 @@ import 'package:example/code_snippets.dart';
 import 'package:example/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:code_text_field/code_text_field.dart';
-import 'package:highlight/languages/all.dart';
+import 'package:runtime_code_highlighter/runtime_code_highlighter.dart';
 
 class CustomCodeBox extends StatefulWidget {
   final String language;
@@ -132,7 +132,7 @@ class _InnerFieldState extends State<InnerField> {
         "bev": TextStyle(color: Colors.indigo),
       },
       language: widget.language,
-      theme: 'base16-ocean.dark',
+      theme: RuntimeCodeHighlighterThemes.ONE_HALF_DARK,
     );
   }
 

@@ -12,7 +12,7 @@ import 'editor_params.dart';
 
 class CodeController extends TextEditingController {
   String? _language;
-  String? _theme;
+  RuntimeCodeHighlighterThemes? _theme;
   CodeAutoComplete? autoComplete;
 
   /// A highlight language to parse the text with
@@ -27,9 +27,9 @@ class CodeController extends TextEditingController {
     notifyListeners();
   }
 
-  String? get theme => _theme;
+  RuntimeCodeHighlighterThemes? get theme => _theme;
 
-  set theme(String? theme) {
+  set theme(RuntimeCodeHighlighterThemes? theme) {
     if (theme == _theme) {
       return;
     }
@@ -84,7 +84,7 @@ class CodeController extends TextEditingController {
   CodeController({
     super.text,
     String? language,
-    String? theme,
+    RuntimeCodeHighlighterThemes? theme,
     Map<String, TextStyle>? patternMap,
     this.stringMap,
     this.params = const EditorParams(),
@@ -271,7 +271,7 @@ class CodeController extends TextEditingController {
     return RuntimeFlutterCodeHighlighter.highlightedWidgetTree(
       text,
       RuntimeCodeHighlighterLanguages.fromExtension(language ?? 'txt').classification(),
-      theme ?? 'OneHalfDark',
+      theme?.name ?? 'OneHalfDark',
       style,
     );
 
@@ -294,7 +294,7 @@ class CodeController extends TextEditingController {
     EditorParams? params,
     List<CodeModifier>? modifiers,
     String? language,
-    String? theme,
+    RuntimeCodeHighlighterThemes? theme,
   }) {
     return CodeController(
       language: language ?? this.language,
