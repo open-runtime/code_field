@@ -17,7 +17,7 @@ class CodeField extends StatefulWidget {
   /// {@macro flutter.widgets.textField.smartQuotesType}
   final SmartQuotesType? smartQuotesType;
 
-/// {@macro flutter.widgets.textField.smartDashesType}
+  /// {@macro flutter.widgets.textField.smartDashesType}
   final SmartDashesType? smartDashesType;
 
   /// {@macro flutter.widgets.textField.keyboardType}
@@ -298,69 +298,51 @@ class _CodeFieldState extends State<CodeField> {
     // Copy important attributes
     numberTextStyle = numberTextStyle.copyWith(
       color: numberTextStyle.color ?? numberColor,
-      fontSize: textStyle.fontSize,
-      fontFamily: textStyle.fontFamily,
-      // height: 1.1,
+      fontSize: numberTextStyle.fontSize,
+      fontFamily: numberTextStyle.fontFamily,
     );
 
     final cursorColor = widget.cursorColor ?? styles?[rootKey]?.color ?? defaultText;
 
-    EditableText? lineNumberCol;
-    Container? numberCol;
+    Widget? lineNumberCol;
+    SizedBox? numberCol;
 
     if (widget.lineNumbers) {
-      /// NEW LINE NUMBER COLUMN TO SOLVE DOUBLE SCROLLBAR BUG
-      lineNumberCol = EditableText(
-        scrollPhysics: const ClampingScrollPhysics(),
-        scrollController: _numberScroll,
-        scrollBehavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-        minLines: widget.minLines,
-        maxLines: widget.maxLines,
-        smartQuotesType: widget.smartQuotesType,
-        scrollPadding: EdgeInsets.zero,
-        focusNode: FocusNode(),
-        cursorColor: Colors.transparent,
-        backgroundCursorColor: Colors.transparent,
-        selectionControls: widget.selectionControls,
-        expands: widget.expands,
-        controller: _numberController ?? (throw Exception('Line Number Controller is Null in CodeField Widget')),
-        style: numberTextStyle,
-        textAlign: widget.lineNumberStyle.textAlign,
-        readOnly: true,
+      lineNumberCol = ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: TextField(
+          smartQuotesType: widget.smartQuotesType,
+          scrollPadding: widget.padding,
+          scrollPhysics: const ClampingScrollPhysics(),
+          style: numberTextStyle,
+          controller: _numberController,
+          enabled: false,
+          minLines: widget.minLines,
+          maxLines: widget.maxLines,
+          selectionControls: widget.selectionControls,
+          expands: widget.expands,
+          scrollController: _numberScroll,
+          decoration: InputDecoration(
+            disabledBorder: InputBorder.none,
+            isDense: widget.isDense,
+            contentPadding: const EdgeInsets.only(top: 6, bottom: 8),
+            border: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            enabledBorder: InputBorder.none,
+          ),
+          textAlign: widget.lineNumberStyle.textAlign,
+          readOnly: true,
+        ),
       );
 
-      /// OLD LINE NUMBER COLUMN
-      // lineNumberCol = TextField(
-      //   smartQuotesType: widget.smartQuotesType,
-      //   scrollPadding: widget.padding,
-      //   style: numberTextStyle,
-      //   controller: _numberController,
-      //   enabled: false,
-      //   minLines: widget.minLines,
-      //   maxLines: widget.maxLines,
-      //   selectionControls: widget.selectionControls,
-      //   expands: widget.expands,
-      //   scrollController: _numberScroll,
-      //   decoration: InputDecoration(
-      //     disabledBorder: InputBorder.none,
-      //     isDense: widget.isDense,
-      //   ),
-      //   textAlign: widget.lineNumberStyle.textAlign,
-      // );
-
-      numberCol = Container(
+      numberCol = SizedBox(
         width: widget.lineNumberStyle.width,
-        color: widget.lineNumberStyle.background,
-
-        /// CUSTOM PADDING
-        padding: const EdgeInsets.only(top: 4),
-
-        /// OLD DEFAULT PADDING
-        // EdgeInsets.only(
-        //   left: widget.padding.left,
-        //   right: widget.lineNumberStyle.margin / 2,
-        // ),
-        child: lineNumberCol,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: widget.lineNumberStyle.background,
+          ),
+          child: lineNumberCol,
+        ),
       );
     }
 
@@ -386,10 +368,11 @@ class _CodeFieldState extends State<CodeField> {
         disabledBorder: InputBorder.none,
         border: InputBorder.none,
         focusedBorder: InputBorder.none,
+        enabledBorder: InputBorder.none,
         isDense: widget.isDense,
         hintStyle: widget.hintStyle,
         hintText: widget.hintText,
-        contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        contentPadding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
       ),
       onTapOutside: (e) {
         Future.delayed(const Duration(milliseconds: 300), hideAutoComplete);
