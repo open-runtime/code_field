@@ -343,7 +343,7 @@ class _CodeFieldState extends State<CodeField> {
           ),
           child: lineNumberCol,
         ),
-      ),
+      );
     }
 
     final codeField = TextField(
