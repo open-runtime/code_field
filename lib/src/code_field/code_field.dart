@@ -56,6 +56,10 @@ class CodeField extends StatefulWidget {
   /// {@macro flutter.widgets.editableText.onChanged}
   final void Function(String)? onChanged;
 
+  /// Enables developer to register an onScrollChanged callback that will emit
+  /// the most up-to-date ScrollController
+  final void Function(ScrollController? controller)? onScrollChanged;
+
   /// {@macro flutter.widgets.editableText.readOnly}
   final bool readOnly;
 
@@ -71,6 +75,8 @@ class CodeField extends StatefulWidget {
   /// {@macro flutter.services.TextInputConfiguration.enableSuggestions}
   final bool enableSuggestions;
 
+  /// {@macro flutter.widgets.textField.hintText}
+  final String? hintText;
   final Color? background;
   final EdgeInsets padding;
   final Decoration? decoration;
@@ -79,7 +85,6 @@ class CodeField extends StatefulWidget {
   final void Function()? onTap;
   final bool lineNumbers;
   final bool horizontalScroll;
-  final String? hintText;
   final TextStyle? hintStyle;
   final CodeAutoComplete? autoComplete;
 
@@ -103,6 +108,7 @@ class CodeField extends StatefulWidget {
     this.lineNumberBuilder,
     this.focusNode,
     this.onChanged,
+    this.onScrollChanged,
     this.isDense = false,
     this.smartQuotesType,
     this.smartDashesType,
@@ -132,6 +138,7 @@ class _CodeFieldState extends State<CodeField> {
   FocusNode? _focusNode;
   String? lines;
   String longestLine = '';
+  List<String> lineNumbers = [];
 
   @override
   void initState() {
@@ -147,6 +154,11 @@ class _CodeFieldState extends State<CodeField> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       createAutoComplate();
+      _codeScroll?.addListener(() {
+        if (widget.onScrollChanged != null) {
+          widget.onScrollChanged!(_codeScroll);
+        }
+      });
     });
 
     _onTextChanged();
@@ -185,9 +197,11 @@ class _CodeFieldState extends State<CodeField> {
     // Rebuild line number
     final str = widget.controller.text.split('\n');
     final buf = <String>[];
+    List<String> temp = [];
 
     for (var k = 0; k < str.length; k++) {
       buf.add((k + 1).toString());
+      temp.add((k + 1).toString());
     }
 
     _numberController?.text = buf.join('\n');
@@ -198,7 +212,9 @@ class _CodeFieldState extends State<CodeField> {
       if (line.length > longestLine.length) longestLine = line;
     });
 
-    setState(() {});
+    setState(() {
+      lineNumbers = temp;
+    });
   }
 
   // Wrap the codeField in a horizontal scrollView
@@ -241,7 +257,6 @@ class _CodeFieldState extends State<CodeField> {
           right: widget.padding.right,
         ),
         scrollDirection: Axis.horizontal,
-
         /// Prevents the horizontal scroll if horizontalScroll is false
         physics: widget.horizontalScroll ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
         child: intrinsic,
@@ -265,8 +280,7 @@ class _CodeFieldState extends State<CodeField> {
     final defaultText = Colors.grey.shade200;
 
     final styles = CodeTheme.of(context)?.styles;
-    Color? backgroundCol =
-        widget.background ?? styles?[rootKey]?.backgroundColor ?? defaultBg;
+    Color? backgroundCol = widget.background ?? styles?[rootKey]?.backgroundColor ?? defaultBg;
 
     if (widget.decoration != null) {
       backgroundCol = null;
@@ -278,10 +292,8 @@ class _CodeFieldState extends State<CodeField> {
       fontSize: textStyle.fontSize ?? 16.0,
     );
 
-    TextStyle numberTextStyle =
-        widget.lineNumberStyle.textStyle ?? const TextStyle();
-    final numberColor =
-        (styles?[rootKey]?.color ?? defaultText).withOpacity(0.7);
+    TextStyle numberTextStyle = widget.lineNumberStyle.textStyle ?? const TextStyle();
+    final numberColor = (styles?[rootKey]?.color ?? defaultText).withOpacity(0.7);
 
     // Copy important attributes
     numberTextStyle = numberTextStyle.copyWith(
@@ -290,8 +302,7 @@ class _CodeFieldState extends State<CodeField> {
       fontFamily: numberTextStyle.fontFamily,
     );
 
-    final cursorColor =
-        widget.cursorColor ?? styles?[rootKey]?.color ?? defaultText;
+    final cursorColor = widget.cursorColor ?? styles?[rootKey]?.color ?? defaultText;
 
     Widget? lineNumberCol;
     SizedBox? numberCol;
@@ -332,7 +343,7 @@ class _CodeFieldState extends State<CodeField> {
           ),
           child: lineNumberCol,
         ),
-      );
+      ),
     }
 
     final codeField = TextField(
@@ -345,6 +356,7 @@ class _CodeFieldState extends State<CodeField> {
         widget.onTap?.call();
       },
       scrollPadding: widget.padding,
+      scrollPhysics: const ClampingScrollPhysics(),
       style: textStyle,
       controller: widget.controller,
       minLines: widget.minLines,
@@ -358,8 +370,8 @@ class _CodeFieldState extends State<CodeField> {
         focusedBorder: InputBorder.none,
         enabledBorder: InputBorder.none,
         isDense: widget.isDense,
-        hintText: widget.hintText,
         hintStyle: widget.hintStyle,
+        hintText: widget.hintText,
         contentPadding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
       ),
       onTapOutside: (e) {
@@ -384,9 +396,7 @@ class _CodeFieldState extends State<CodeField> {
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           // Control horizontal scrolling
-          return widget.wrap
-              ? codeField
-              : _wrapInScrollView(codeField, textStyle, constraints.maxWidth);
+          return widget.wrap ? codeField : _wrapInScrollView(codeField, textStyle, constraints.maxWidth);
         },
       ),
     );
