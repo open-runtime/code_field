@@ -257,6 +257,7 @@ class _CodeFieldState extends State<CodeField> {
           right: widget.padding.right,
         ),
         scrollDirection: Axis.horizontal,
+
         /// Prevents the horizontal scroll if horizontalScroll is false
         physics: widget.horizontalScroll ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
         child: intrinsic,
@@ -308,8 +309,13 @@ class _CodeFieldState extends State<CodeField> {
     SizedBox? numberCol;
 
     if (widget.lineNumbers) {
-      lineNumberCol = ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      lineNumberCol = Theme(
+        data: ThemeData(
+          scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
+                thumbVisibility: const WidgetStatePropertyAll(false),
+                thumbColor: const WidgetStatePropertyAll(Colors.transparent),
+              ),
+        ),
         child: TextField(
           smartQuotesType: widget.smartQuotesType,
           scrollPadding: widget.padding,
