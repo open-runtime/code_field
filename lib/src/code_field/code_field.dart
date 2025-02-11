@@ -329,10 +329,11 @@ class _CodeFieldState extends State<CodeField> {
           expands: widget.expands,
           scrollController: _numberScroll,
           decoration: InputDecoration(
-            disabledBorder: InputBorder.none,
+            isCollapsed: true,
             isDense: widget.isDense,
-            contentPadding: const EdgeInsets.only(top: 6, bottom: 8),
+            contentPadding: const EdgeInsets.only(top: 4, bottom: 4),
             border: InputBorder.none,
+            disabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
             enabledBorder: InputBorder.none,
           ),
@@ -375,10 +376,10 @@ class _CodeFieldState extends State<CodeField> {
         border: InputBorder.none,
         focusedBorder: InputBorder.none,
         enabledBorder: InputBorder.none,
+        isCollapsed: true,
         isDense: widget.isDense,
         hintStyle: widget.hintStyle,
         hintText: widget.hintText,
-        contentPadding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
       ),
       onTapOutside: (e) {
         Future.delayed(const Duration(milliseconds: 300), hideAutoComplete);
