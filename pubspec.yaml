@@ -16,6 +16,7 @@ dependencies:
     git:
       url: git@github.com:open-runtime/code_highlighter.git
       path: flutter
+      ref: chore/updated-deps
 
 dev_dependencies:
   flutter_test:

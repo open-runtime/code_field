@@ -22,6 +22,7 @@ dev_dependencies:
     git:
       url: git@github.com:open-runtime/code_highlighter.git
       path: flutter
+      ref: chore/updated-deps
 
 flutter:
   uses-material-design: true
