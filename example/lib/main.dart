@@ -1,4 +1,4 @@
-import 'package:example/custom_code_box.dart';
+import 'package:code_field_example/custom_code_box.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

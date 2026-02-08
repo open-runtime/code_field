@@ -1,5 +1,5 @@
-import 'package:example/code_snippets.dart';
-import 'package:example/themes.dart';
+import 'package:code_field_example/code_snippets.dart';
+import 'package:code_field_example/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:code_text_field/code_text_field.dart';
 import 'package:runtime_code_highlighter/runtime_code_highlighter.dart';
